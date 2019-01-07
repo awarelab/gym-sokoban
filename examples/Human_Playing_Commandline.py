@@ -6,6 +6,8 @@ import numpy as np
 import argparse
 import os
 
+from gym_sokoban.envs import SokobanEnv
+
 parser = argparse.ArgumentParser(description='Run environment with random selected actions.')
 parser.add_argument('--rounds', '-r', metavar='rounds', type=int,
                     help='number of rounds to play (default: 1)', default=1)
@@ -37,6 +39,7 @@ if save_images and not os.path.exists('images'):
 
 ts = time.time()
 env = gym.make(env_name)
+
 ACTION_LOOKUP = env.unwrapped.get_action_lookup()
 print("Created environment: {}".format(env_name))
 
@@ -76,7 +79,7 @@ for i_episode in range(n_rounds):
             print_available_actions()
             continue
 
-        observation, reward, done, info = env.step(action)
+        observation, reward, done, info = env._step(action)
         print(ACTION_LOOKUP[action], reward, done, info)
 
         if save_images:

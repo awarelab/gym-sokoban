@@ -2,9 +2,12 @@ import gym
 from gym.utils import seeding
 from gym.spaces.discrete import Discrete
 from gym.spaces import Box
+
+from gym_sokoban import logger
 from .room_utils import generate_room
 from .render_utils import room_to_rgb, room_to_tiny_world_rgb
 import numpy as np
+
 
 
 class SokobanEnv(gym.Env):
@@ -16,7 +19,10 @@ class SokobanEnv(gym.Env):
                  dim_room=(10, 10),
                  max_steps=120,
                  num_boxes=4,
-                 num_gen_steps=None):
+                 num_gen_steps=None,
+                 mode='rgb_array'):
+        logger.info('Creating SokobanEnv')
+
 
         # General Configuration
         self.dim_room = dim_room
@@ -41,6 +47,7 @@ class SokobanEnv(gym.Env):
         self.action_space = Discrete(len(ACTION_LOOKUP))
         screen_height, screen_width = (dim_room[0] * 16, dim_room[1] * 16)
         self.observation_space = Box(low=0, high=255, shape=(screen_height, screen_width, 3), dtype=np.uint8)
+        self.mode = mode
 
         # Initialize Room
         self.reset()
@@ -67,11 +74,11 @@ class SokobanEnv(gym.Env):
             moved_player = self._move(action)
 
         self._calc_reward()
-        
+
         done = self._check_if_done()
 
         # Convert the observation to RGB frame
-        observation = self.render(mode='rgb_array')
+        observation = self.render(mode=self.mode)
 
         info = {
             "action.name": ACTION_LOOKUP[action],
@@ -171,16 +178,16 @@ class SokobanEnv(gym.Env):
             self.reward_last += self.reward_box_on_target
         elif current_boxes_on_target < self.boxes_on_target:
             self.reward_last += self.penalty_box_off_target
-        
-        game_won = self._check_if_all_boxes_on_target()        
+
+        game_won = self._check_if_all_boxes_on_target()
         if game_won:
             self.reward_last += self.reward_finished
-        
+
         self.boxes_on_target = current_boxes_on_target
 
     def _check_if_done(self):
         # Check if the game is over either through reaching the maximum number
-        # of available steps or by pushing all boxes on the targets.        
+        # of available steps or by pushing all boxes on the targets.
         return self._check_if_all_boxes_on_target() or self._check_if_maxsteps()
 
     def _check_if_all_boxes_on_target(self):
@@ -210,7 +217,7 @@ class SokobanEnv(gym.Env):
         self.reward_last = 0
         self.boxes_on_target = 0
 
-        starting_observation = room_to_rgb(self.room_state, self.room_fixed)
+        starting_observation = self.render(mode=self.mode)
         return starting_observation
 
     def render(self, mode='human', close=None):
@@ -234,7 +241,7 @@ class SokobanEnv(gym.Env):
     def get_image(self, mode):
 
         if mode.startswith('tiny_'):
-            img = room_to_tiny_world_rgb(self.room_state, self.room_fixed, scale=4)
+            img = room_to_tiny_world_rgb(self.room_state, self.room_fixed, scale=1)
         else:
             img = room_to_rgb(self.room_state, self.room_fixed)
 

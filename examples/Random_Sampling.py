@@ -21,7 +21,7 @@ for i_episode in range(1):#20
 
         # Sleep makes the actions visible for users
         time.sleep(1)
-        observation, reward, done, info = env.step(action)
+        observation, reward, done, info = env._step(action)
 
         print(ACTION_LOOKUP[action], reward, done, info)
         if done:
